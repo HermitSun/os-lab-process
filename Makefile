@@ -36,8 +36,8 @@ run:
 # This Program
 ORANGESBOOT	= boot/boot.bin boot/loader.bin
 ORANGESKERNEL	= kernel.bin
-OBJS		= kernel/kernel.o kernel/start.o kernel/main.o kernel/clock.o\
-			kernel/i8259.o kernel/global.o kernel/protect.o\
+OBJS		= kernel/kernel.o kernel/syscall.o kernel/start.o kernel/main.o kernel/clock.o\
+			kernel/i8259.o kernel/global.o kernel/protect.o kernel/proc.o\
 			lib/kliba.o lib/klib.o lib/string.o
 DASMOUTPUT	= kernel.bin.asm
 
@@ -80,6 +80,9 @@ $(ORANGESKERNEL) : $(OBJS)
 kernel/kernel.o : kernel/kernel.asm include/sconst.inc
 	$(ASM) $(ASMKFLAGS) -o $@ $<
 
+kernel/syscall.o : kernel/syscall.asm include/sconst.inc
+	$(ASM) $(ASMKFLAGS) -o $@ $<
+
 kernel/start.o: kernel/start.c include/type.h include/const.h include/protect.h include/string.h include/proc.h include/proto.h \
 			include/global.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -100,6 +103,9 @@ kernel/global.o: kernel/global.c include/type.h include/const.h include/protect.
 
 kernel/protect.o: kernel/protect.c include/type.h include/const.h include/protect.h include/proc.h include/proto.h \
 			include/global.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+kernel/proc.o: kernel/proc.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 lib/klib.o: lib/klib.c include/type.h include/const.h include/protect.h include/string.h include/proc.h include/proto.h \

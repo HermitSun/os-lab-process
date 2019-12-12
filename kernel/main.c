@@ -61,9 +61,14 @@ PUBLIC int kernel_main()
 		selector_ldt += 1 << 3;
 	}
 
-	k_reenter = -1;
+	k_reenter = 0;
+	ticks = 0;
 
-	p_proc_ready	= proc_table; 
+	p_proc_ready	= proc_table;
+
+        put_irq_handler(CLOCK_IRQ, clock_handler); /* 设定时钟中断处理程序 */
+        enable_irq(CLOCK_IRQ);                     /* 让8259A可以接收时钟中断 */
+
 	restart();
 
 	while(1){}
@@ -75,9 +80,9 @@ PUBLIC int kernel_main()
 void TestA()
 {
 	int i = 0;
-	while(1){
+	while (1) {
 		disp_str("A");
-		disp_int(i++);
+		disp_int(get_ticks());
 		disp_str(".");
 		delay(1);
 	}
