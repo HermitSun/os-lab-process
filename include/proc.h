@@ -29,15 +29,17 @@ typedef struct s_stackframe {	/* proc_ptr points here				↑ Low			*/
 
 
 typedef struct s_proc {
-	STACK_FRAME			regs;			/* process' registers saved in stack frame */
+	STACK_FRAME regs;          /* process registers saved in stack frame */
 
-	u16				ldt_sel;		/* selector in gdt giving ldt base and limit*/
-	DESCRIPTOR			ldts[LDT_SIZE];		/* local descriptors for code and data */
-								/* 2 is LDT_SIZE - avoid include protect.h */
-	u32				pid;			/* process id passed in from MM */
-	char				p_name[16];		/* name of the process */
+	u16 ldt_sel;               /* gdt selector giving ldt base and limit */
+	DESCRIPTOR ldts[LDT_SIZE]; /* local descriptors for code and data */
+
+        int ticks;                 /* remained ticks */
+        int priority;
+
+	u32 pid;                   /* process id passed in from MM */
+	char p_name[16];           /* name of the process */
 }PROCESS;
-
 
 typedef struct s_task {
 	task_f	initial_eip;

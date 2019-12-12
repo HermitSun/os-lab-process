@@ -125,10 +125,12 @@ in_byte:
 ; ========================================================================
 ; Disable an interrupt request line by setting an 8259 bit.
 ; Equivalent code:
-;	if(irq < 8)
+;	if(irq < 8){
 ;		out_byte(INT_M_CTLMASK, in_byte(INT_M_CTLMASK) | (1 << irq));
-;	else
+;	}
+;	else{
 ;		out_byte(INT_S_CTLMASK, in_byte(INT_S_CTLMASK) | (1 << irq));
+;	}
 disable_irq:
         mov     ecx, [esp + 4]          ; irq
         pushf
@@ -165,10 +167,12 @@ dis_already:
 ; ========================================================================
 ; Enable an interrupt request line by clearing an 8259 bit.
 ; Equivalent code:
-;       if(irq < 8)
+;       if(irq < 8){
 ;               out_byte(INT_M_CTLMASK, in_byte(INT_M_CTLMASK) & ~(1 << irq));
-;       else
+;       }
+;       else{
 ;               out_byte(INT_S_CTLMASK, in_byte(INT_S_CTLMASK) & ~(1 << irq));
+;       }
 ;
 enable_irq:
         mov     ecx, [esp + 4]          ; irq

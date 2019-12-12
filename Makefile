@@ -45,6 +45,9 @@ DASMOUTPUT	= kernel.bin.asm
 .PHONY : everything final image clean realclean disasm all buildimg
 
 # Default starting position
+nop :
+	@echo "why not \`make image' huh? :)"
+
 everything : $(ORANGESBOOT) $(ORANGESKERNEL)
 
 all : realclean everything
