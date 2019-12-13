@@ -18,19 +18,43 @@
  *======================================================================*/
 PUBLIC void schedule()
 {
-	PROCESS* p;
-	int	 greatest_ticks = 0;
+	PROCESS *p;
+	int greatest_ticks = 0;
 
-	while (!greatest_ticks) {
-		for (p = proc_table; p < proc_table+NR_TASKS; p++) {
-			if (p->ticks > greatest_ticks) {
+	// 如果进程在睡眠，每次调度时减去睡眠时间
+	for (p = proc_table; p < proc_table + NR_TASKS; p++)
+	{
+		if (p->sleep_time)
+		{
+			--p->sleep_time;
+			// disp_int(p->sleep_time);
+		}
+	}
+	while (!greatest_ticks)
+	{
+		for (p = proc_table; p < proc_table + NR_TASKS; p++)
+		{
+			if (p->sleep_time || p->is_wait)
+			{
+				// 睡眠或等待时不分配时间片
+				continue;
+			}
+			if (p->ticks > greatest_ticks)
+			{
 				greatest_ticks = p->ticks;
 				p_proc_ready = p;
 			}
 		}
 
-		if (!greatest_ticks) {
-			for (p = proc_table; p < proc_table+NR_TASKS; p++) {
+		if (!greatest_ticks)
+		{
+			for (p = proc_table; p < proc_table + NR_TASKS; p++)
+			{
+				if (p->sleep_time || p->is_wait)
+				{
+					// 睡眠时不分配时间片
+					continue;
+				}
 				p->ticks = p->priority;
 			}
 		}
@@ -45,3 +69,144 @@ PUBLIC int sys_get_ticks()
 	return ticks;
 }
 
+// 进程睡眠，不分配时间片
+// 事实上睡眠的总时间要考虑其他进程，因为每次调度时才会检查一次
+PUBLIC int sys_sleep(int milli_sec)
+{
+	// ms转换成tick
+	p_proc_ready->sleep_time = milli_sec / 10;
+	schedule();
+	return 0;
+}
+
+// 打印字符串
+PUBLIC int sys_print(char *str)
+{
+	disp_str(str);
+	return 0;
+}
+
+// 因为结构体不能直接定义函数，所以拿出来了
+// 入队
+PRIVATE void push(SEMAPHORE *s, PROCESS *p)
+{
+	if (s->size < 50)
+	{
+		s->queue[s->size] = p;
+		++s->size;
+	}
+}
+// 出队
+PRIVATE PROCESS *pop(SEMAPHORE *s)
+{
+	PROCESS *p = s->queue[0];
+	for (int i = 0; i < s->size - 1; ++i)
+	{
+		s->queue[i] = s->queue[i + 1];
+	}
+	--s->size;
+	return p;
+}
+
+// 信号量P操作
+PUBLIC int sys_P(SEMAPHORE *s)
+{
+	--s->value;
+	// 没有可用资源，等待
+	if (s->value < 0)
+	{
+		// 当前进程等待并进入队列
+		p_proc_ready->is_wait = 1;
+		push(s, p_proc_ready);
+		schedule();
+	}
+	return 0;
+}
+
+// 信号量V操作
+PUBLIC int sys_V(SEMAPHORE *s)
+{
+	++s->value;
+	// 有等待进程
+	if (s->value <= 0)
+	{
+		// 退出队列并唤醒
+		PROCESS *wait_process = pop(s);
+		wait_process->is_wait = 0;
+	}
+	return 0;
+}
+
+// 信号量和控制变量
+SEMAPHORE s_reader;
+SEMAPHORE s_writer;
+SEMAPHORE *p_s_reader;
+SEMAPHORE *p_s_writer;
+int num_readers = 0;
+
+//----------------------------------------------------------------
+// 以下为读者优先
+//----------------------------------------------------------------
+// 初始化信号量
+PUBLIC int sem_init()
+{
+	// 允许同时读的读者数量
+	s_reader.value = 1;
+	s_reader.size = 0;
+	s_writer.value = 1;
+	s_writer.size = 0;
+	p_s_reader = &s_reader;
+	p_s_writer = &s_writer;
+	return 0;
+}
+
+PUBLIC int reader(char *name)
+{
+	P(p_s_reader);
+	if (num_readers == 0)
+	{
+		P(p_s_writer);
+	}
+	++num_readers;
+	V(p_s_reader);
+
+	// 读文件可以异步进行
+	// 读开始
+	disp_color_str(name, COLOR_BLUE);
+	disp_color_str(" starts reading.\n", COLOR_BLUE);
+	// 正在读
+	disp_color_str(name, COLOR_GREEN);
+	disp_color_str(" is reading.\n", COLOR_GREEN);
+	// 读完成
+	disp_color_str(name, COLOR_RED);
+	disp_color_str(" finishes reading.\n", COLOR_RED);
+
+	P(p_s_reader);
+	++num_readers;
+	if (num_readers == 0)
+	{
+		V(p_s_writer);
+	}
+	V(p_s_reader);
+	return 0;
+}
+
+PUBLIC int writer(char *name)
+{
+	P(p_s_writer);
+	// 写开始
+	disp_color_str(name, COLOR_BLUE);
+	disp_color_str(" starts writing.\n", COLOR_BLUE);
+	// 正在写
+	disp_color_str(name, COLOR_GREEN);
+	disp_color_str(" is writing.\n", COLOR_GREEN);
+	// 写完成
+	disp_color_str(name, COLOR_RED);
+	disp_color_str(" finishes writing.\n", COLOR_RED);
+	V(p_s_writer);
+	return 0;
+}
+
+//----------------------------------------------------------------
+// 以下为写者优先
+//----------------------------------------------------------------
