@@ -50,8 +50,8 @@ PUBLIC int sys_print(char *str);
 PUBLIC int sys_P(SEMAPHORE *s);
 PUBLIC int sys_V(SEMAPHORE *s);
 PUBLIC int sem_init();
-PUBLIC int reader(char *name);
-PUBLIC int writer(char *name);
+PUBLIC int reader(char *name, int cost);
+PUBLIC int writer(char *name, int cost);
 
 /* syscall.asm */
 PUBLIC void sys_call(); /* int_handler */

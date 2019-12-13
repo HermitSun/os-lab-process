@@ -13,6 +13,9 @@
 #include "proc.h"
 #include "global.h"
 
+PRIVATE void push(SEMAPHORE *s, PROCESS *p);
+PRIVATE PROCESS *pop(SEMAPHORE *s);
+
 /*======================================================================*
                               schedule
  *======================================================================*/
@@ -86,28 +89,6 @@ PUBLIC int sys_print(char *str)
 	return 0;
 }
 
-// 因为结构体不能直接定义函数，所以拿出来了
-// 入队
-PRIVATE void push(SEMAPHORE *s, PROCESS *p)
-{
-	if (s->size < 50)
-	{
-		s->queue[s->size] = p;
-		++s->size;
-	}
-}
-// 出队
-PRIVATE PROCESS *pop(SEMAPHORE *s)
-{
-	PROCESS *p = s->queue[0];
-	for (int i = 0; i < s->size - 1; ++i)
-	{
-		s->queue[i] = s->queue[i + 1];
-	}
-	--s->size;
-	return p;
-}
-
 // 信号量P操作
 PUBLIC int sys_P(SEMAPHORE *s)
 {
@@ -140,28 +121,110 @@ PUBLIC int sys_V(SEMAPHORE *s)
 // 信号量和控制变量
 SEMAPHORE s_reader;
 SEMAPHORE s_writer;
+SEMAPHORE s_mutex;
 SEMAPHORE *p_s_reader;
 SEMAPHORE *p_s_writer;
-int num_readers = 0;
+SEMAPHORE *p_s_mutex;
+int num_readers;
 
+// 首先说明，因为屏幕不够大，通过颜色来区分状态
+// 红色开始读写，蓝色正在读写，绿色读写完成
 //----------------------------------------------------------------
 // 以下为读者优先
 //----------------------------------------------------------------
+
+// // 初始化信号量
+// PUBLIC int sem_init()
+// {
+// 	// 允许同时读的读者数量
+// 	s_reader.value = 1;
+// 	s_reader.size = 0;
+// 	s_writer.value = 1;
+// 	s_writer.size = 0;
+// 	num_readers = 0;
+// 	p_s_reader = &s_reader;
+// 	p_s_writer = &s_writer;
+// 	return 0;
+// }
+
+// PUBLIC int reader(char *name, int cost)
+// {
+// 	P(p_s_reader);
+// 	if (num_readers == 0)
+// 	{
+// 		P(p_s_writer);
+// 	}
+// 	++num_readers;
+// 	V(p_s_reader);
+
+// 	// 读文件可以异步进行
+// 	// 读开始
+// 	disp_color_str(name, COLOR_RED);
+// 	// disp_color_str(" starts. ", COLOR_BLUE);
+// 	sleep(cost);
+// 	// 正在读
+// 	disp_color_str(name, COLOR_BLUE);
+// 	// disp_color_str(" reading. ", COLOR_GREEN);
+
+// 	// 读完成
+// 	disp_color_str(name, COLOR_GREEN);
+// 	// disp_color_str(" ends. ", COLOR_RED);
+
+// 	P(p_s_reader);
+// 	--num_readers;
+// 	if (num_readers == 0)
+// 	{
+// 		V(p_s_writer);
+// 	}
+// 	V(p_s_reader);
+// 	return 0;
+// }
+
+// PUBLIC int writer(char *name, int cost)
+// {
+// 	P(p_s_writer);
+
+// 	// 写开始
+// 	disp_color_str(name, COLOR_RED);
+// 	// disp_color_str(" starts. ", COLOR_BLUE);
+// 	sleep(cost);
+// 	// 正在写
+// 	disp_color_str(name, COLOR_BLUE);
+// 	// disp_color_str(" writing. ", COLOR_GREEN);
+// 	// 写完成
+// 	disp_color_str(name, COLOR_GREEN);
+// 	// disp_color_str(" ends. ", COLOR_RED);
+
+// 	V(p_s_writer);
+// 	return 0;
+// }
+
+//----------------------------------------------------------------
+// 以下为写者优先
+//----------------------------------------------------------------
+
 // 初始化信号量
 PUBLIC int sem_init()
 {
 	// 允许同时读的读者数量
 	s_reader.value = 1;
 	s_reader.size = 0;
+	// 只允许1个写者同时写
 	s_writer.value = 1;
 	s_writer.size = 0;
+	s_mutex.value = 1;
+	s_mutex.size = 0;
+	num_readers = 0;
 	p_s_reader = &s_reader;
 	p_s_writer = &s_writer;
+	p_s_mutex = &s_mutex;
 	return 0;
 }
 
-PUBLIC int reader(char *name)
+PUBLIC int reader(char *name, int cost)
 {
+	// 请求互斥
+	P(p_s_mutex);
 	P(p_s_reader);
 	if (num_readers == 0)
 	{
@@ -169,20 +232,24 @@ PUBLIC int reader(char *name)
 	}
 	++num_readers;
 	V(p_s_reader);
+	// 释放互斥
+	V(p_s_mutex);
 
 	// 读文件可以异步进行
 	// 读开始
-	disp_color_str(name, COLOR_BLUE);
-	disp_color_str(" starts reading.\n", COLOR_BLUE);
-	// 正在读
-	disp_color_str(name, COLOR_GREEN);
-	disp_color_str(" is reading.\n", COLOR_GREEN);
-	// 读完成
 	disp_color_str(name, COLOR_RED);
-	disp_color_str(" finishes reading.\n", COLOR_RED);
+	// disp_color_str(" starts. ", COLOR_BLUE);
+	sleep(cost);
+	// 正在读
+	disp_color_str(name, COLOR_BLUE);
+	// disp_color_str(" reading. ", COLOR_GREEN);
+
+	// 读完成
+	disp_color_str(name, COLOR_GREEN);
+	// disp_color_str(" ends. ", COLOR_RED);
 
 	P(p_s_reader);
-	++num_readers;
+	--num_readers;
 	if (num_readers == 0)
 	{
 		V(p_s_writer);
@@ -191,22 +258,48 @@ PUBLIC int reader(char *name)
 	return 0;
 }
 
-PUBLIC int writer(char *name)
+PUBLIC int writer(char *name, int cost)
 {
+	// 请求互斥
+	P(p_s_mutex);
 	P(p_s_writer);
+
 	// 写开始
-	disp_color_str(name, COLOR_BLUE);
-	disp_color_str(" starts writing.\n", COLOR_BLUE);
-	// 正在写
-	disp_color_str(name, COLOR_GREEN);
-	disp_color_str(" is writing.\n", COLOR_GREEN);
-	// 写完成
 	disp_color_str(name, COLOR_RED);
-	disp_color_str(" finishes writing.\n", COLOR_RED);
+	// disp_color_str(" starts. ", COLOR_BLUE);
+	sleep(cost);
+	// 正在写
+	disp_color_str(name, COLOR_BLUE);
+	// disp_color_str(" writing. ", COLOR_GREEN);
+	// 写完成
+	disp_color_str(name, COLOR_GREEN);
+	// disp_color_str(" ends. ", COLOR_RED);
+
 	V(p_s_writer);
+	// 释放互斥
+	V(p_s_mutex);
+
 	return 0;
 }
 
-//----------------------------------------------------------------
-// 以下为写者优先
-//----------------------------------------------------------------
+// 因为结构体不能直接定义函数，所以拿出来了
+// 入队
+PRIVATE void push(SEMAPHORE *s, PROCESS *p)
+{
+	if (s->size < 50)
+	{
+		s->queue[s->size] = p;
+		++s->size;
+	}
+}
+// 出队
+PRIVATE PROCESS *pop(SEMAPHORE *s)
+{
+	PROCESS *p = s->queue[0];
+	for (int i = 0; i < s->size - 1; ++i)
+	{
+		s->queue[i] = s->queue[i + 1];
+	}
+	--s->size;
+	return p;
+}

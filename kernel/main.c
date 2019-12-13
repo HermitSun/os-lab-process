@@ -90,6 +90,9 @@ PUBLIC int kernel_main()
 	}
 	disp_pos = 0;
 
+	// 初始化信号量和控制变量
+	sem_init();
+
 	restart();
 
 	while (1)
@@ -97,10 +100,10 @@ PUBLIC int kernel_main()
 	}
 }
 
-// 用于初始化的进程
+// 用于占位和协调的进程
+// 如果没有这个进程，别的进程全部sleep，会导致死锁
 void init()
 {
-	// sem_init();
 	int i = 0;
 	while (1)
 	{
@@ -118,8 +121,7 @@ void A()
 	int i = 0;
 	while (1)
 	{
-		print("A.");
-		sleep(20000);
+		reader("A", 20000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
@@ -135,8 +137,7 @@ void B()
 	int i = 0;
 	while (1)
 	{
-		print("B.");
-		sleep(30000);
+		reader("B", 30000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
@@ -152,8 +153,7 @@ void C()
 	int i = 0;
 	while (1)
 	{
-		print("C.");
-		sleep(30000);
+		reader("C", 30000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
@@ -169,8 +169,7 @@ void D()
 	int i = 0;
 	while (1)
 	{
-		print("D.");
-		sleep(30000);
+		writer("D", 30000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
@@ -186,8 +185,7 @@ void E()
 	int i = 0;
 	while (1)
 	{
-		print("E.");
-		sleep(40000);
+		writer("E", 40000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
@@ -203,16 +201,23 @@ void F()
 	int i = 0;
 	while (1)
 	{
+		// 如果在if-else里声明局部变量，会打印乱码；但是为什么？？？
+		// 好像是disp_str本身实现的bug
+		char readers_print[] = "Reading. Readers: ";
+		char readers_count_print[32] = {'\0'};
+		char writers_print[] = "Writing.\n";
 		// 正在读
-		// if (num_readers)
-		// {
-		// 	print("Is reading now. Current readers: ");
-		// 	print(num_readers);
-		// }
-		// else
-		// {
-		// 	print("Is writing now.\n");
-		// }
+		if (num_readers)
+		{
+			print(readers_print);
+			print(c_itoa(num_readers, readers_count_print, 10));
+			print("\n");
+		}
+		// 正在写
+		else
+		{
+			print(writers_print);
+		}
 		// print(p_proc_ready->p_name);
 		sleep(10000);
 
