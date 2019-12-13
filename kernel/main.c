@@ -89,7 +89,6 @@ PUBLIC int kernel_main()
 		disp_str(" ");
 	}
 	disp_pos = 0;
-
 	// 初始化信号量和控制变量
 	sem_init();
 
@@ -205,7 +204,7 @@ void F()
 		// 好像是disp_str本身实现的bug
 		char readers_print[] = "Reading. Readers: ";
 		char readers_count_print[32] = {'\0'};
-		char writers_print[] = "Writing.\n";
+		char writers_print[] = "Writing. \n";
 		// 正在读
 		if (num_readers)
 		{

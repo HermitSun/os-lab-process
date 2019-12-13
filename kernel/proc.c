@@ -15,6 +15,7 @@
 
 PRIVATE void push(SEMAPHORE *s, PROCESS *p);
 PRIVATE PROCESS *pop(SEMAPHORE *s);
+PUBLIC void clear_screen();
 
 /*======================================================================*
                               schedule
@@ -137,7 +138,7 @@ int num_readers;
 // PUBLIC int sem_init()
 // {
 // 	// 允许同时读的读者数量
-// 	s_reader.value = 1;
+// 	s_reader.value = 3;
 // 	s_reader.size = 0;
 // 	s_writer.value = 1;
 // 	s_writer.size = 0;
@@ -155,9 +156,8 @@ int num_readers;
 // 		P(p_s_writer);
 // 	}
 // 	++num_readers;
-// 	V(p_s_reader);
+// 	// V(p_s_reader);
 
-// 	// 读文件可以异步进行
 // 	// 读开始
 // 	disp_color_str(name, COLOR_RED);
 // 	// disp_color_str(" starts. ", COLOR_BLUE);
@@ -170,7 +170,7 @@ int num_readers;
 // 	disp_color_str(name, COLOR_GREEN);
 // 	// disp_color_str(" ends. ", COLOR_RED);
 
-// 	P(p_s_reader);
+// 	// P(p_s_reader);
 // 	--num_readers;
 // 	if (num_readers == 0)
 // 	{
@@ -207,7 +207,7 @@ int num_readers;
 PUBLIC int sem_init()
 {
 	// 允许同时读的读者数量
-	s_reader.value = 1;
+	s_reader.value = 3;
 	s_reader.size = 0;
 	// 只允许1个写者同时写
 	s_writer.value = 1;
@@ -231,24 +231,25 @@ PUBLIC int reader(char *name, int cost)
 		P(p_s_writer);
 	}
 	++num_readers;
-	V(p_s_reader);
+	// V(p_s_reader);
 	// 释放互斥
 	V(p_s_mutex);
 
-	// 读文件可以异步进行
 	// 读开始
+	clear_screen();
 	disp_color_str(name, COLOR_RED);
-	// disp_color_str(" starts. ", COLOR_BLUE);
+	disp_color_str(" starts. ", COLOR_RED);
 	sleep(cost);
 	// 正在读
+	clear_screen();
 	disp_color_str(name, COLOR_BLUE);
-	// disp_color_str(" reading. ", COLOR_GREEN);
-
+	disp_color_str(" readed. ", COLOR_BLUE);
 	// 读完成
+	clear_screen();
 	disp_color_str(name, COLOR_GREEN);
-	// disp_color_str(" ends. ", COLOR_RED);
+	disp_color_str(" ends. ", COLOR_GREEN);
 
-	P(p_s_reader);
+	// P(p_s_reader);
 	--num_readers;
 	if (num_readers == 0)
 	{
@@ -265,15 +266,18 @@ PUBLIC int writer(char *name, int cost)
 	P(p_s_writer);
 
 	// 写开始
+	clear_screen();
 	disp_color_str(name, COLOR_RED);
-	// disp_color_str(" starts. ", COLOR_BLUE);
+	disp_color_str(" starts. ", COLOR_RED);
 	sleep(cost);
 	// 正在写
+	clear_screen();
 	disp_color_str(name, COLOR_BLUE);
-	// disp_color_str(" writing. ", COLOR_GREEN);
+	disp_color_str(" writed. ", COLOR_BLUE);
 	// 写完成
+	clear_screen();
 	disp_color_str(name, COLOR_GREEN);
-	// disp_color_str(" ends. ", COLOR_RED);
+	disp_color_str(" ends. ", COLOR_GREEN);
 
 	V(p_s_writer);
 	// 释放互斥
@@ -302,4 +306,18 @@ PRIVATE PROCESS *pop(SEMAPHORE *s)
 	}
 	--s->size;
 	return p;
+}
+
+// （在有必要的情况下）清空屏幕
+PUBLIC void clear_screen()
+{
+	if (disp_pos >= 80 * 25 * 2 - 80 * 4)
+	{
+		disp_pos = 0;
+		for (int i = 0; i < 80 * 25 * 2; i++)
+		{
+			print(" ");
+		}
+		disp_pos = 0;
+	}
 }
