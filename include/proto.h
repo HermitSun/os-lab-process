@@ -19,6 +19,7 @@ PUBLIC u32 seg2phys(u16 seg);
 
 /* klib.c */
 PUBLIC void delay(int time);
+PUBLIC char *c_itoa(int num, char *str, int radix);
 
 /* kernel.asm */
 void restart();
