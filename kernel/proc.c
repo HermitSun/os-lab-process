@@ -171,7 +171,7 @@ PUBLIC int reader(char *name, int cost)
 	clear_screen();
 	color_print(name, COLOR_RED);
 	color_print(" starts. ", COLOR_RED);
-	sleep(cost);
+	milli_delay(cost);
 	// 正在读
 	clear_screen();
 	color_print(name, COLOR_BLUE);
@@ -200,7 +200,7 @@ PUBLIC int writer(char *name, int cost)
 	clear_screen();
 	color_print(name, COLOR_RED);
 	color_print(" starts. ", COLOR_RED);
-	sleep(cost);
+	milli_delay(cost);
 	// 正在写
 	clear_screen();
 	color_print(name, COLOR_BLUE);

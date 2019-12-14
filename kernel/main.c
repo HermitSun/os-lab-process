@@ -217,8 +217,7 @@ void F()
 		{
 			print(writers_print);
 		}
-		// print(p_proc_ready->p_name);
-		sleep(10000);
+		milli_delay(10000);
 
 		++i;
 		if (i > MAGIC_NUMBER)
