@@ -61,7 +61,7 @@
 #define AT_WINI_IRQ 14 /* at winchester */
 
 /* system call */
-#define NR_SYS_CALL 5
+#define NR_SYS_CALL 6
 
 // 防止溢出的一个“魔法数字”
 #define MAGIC_NUMBER 100000
