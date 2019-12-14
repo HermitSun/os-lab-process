@@ -18,7 +18,9 @@ PUBLIC PROCESS proc_table[NR_TASKS];
 
 PUBLIC char task_stack[STACK_SIZE_TOTAL];
 
-// // 读者优先
+// 因为系统采用时间片轮转，所以放在前面的进程“优先级”较高
+// 通过调整顺序即可实现读者/写者优先
+// 读者优先
 // PUBLIC TASK task_table[NR_TASKS] = {
 // 	{init, STACK_SIZE_INIT, "init"},
 // 	{A, STACK_SIZE_A, "A"},

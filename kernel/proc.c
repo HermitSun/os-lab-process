@@ -90,6 +90,13 @@ PUBLIC int sys_print(char *str)
 	return 0;
 }
 
+// 带颜色打印字符串
+PUBLIC int sys_color_print(char *str, int color)
+{
+	disp_color_str(str, color);
+	return 0;
+}
+
 // 信号量P操作
 PUBLIC int sys_P(SEMAPHORE *s)
 {
@@ -128,81 +135,6 @@ SEMAPHORE *p_s_writer;
 SEMAPHORE *p_s_mutex;
 int num_readers;
 
-// 首先说明，因为屏幕不够大，通过颜色来区分状态
-// 红色开始读写，蓝色正在读写，绿色读写完成
-//----------------------------------------------------------------
-// 以下为读者优先
-//----------------------------------------------------------------
-
-// // 初始化信号量
-// PUBLIC int sem_init()
-// {
-// 	// 允许同时读的读者数量
-// 	s_reader.value = 3;
-// 	s_reader.size = 0;
-// 	s_writer.value = 1;
-// 	s_writer.size = 0;
-// 	num_readers = 0;
-// 	p_s_reader = &s_reader;
-// 	p_s_writer = &s_writer;
-// 	return 0;
-// }
-
-// PUBLIC int reader(char *name, int cost)
-// {
-// 	P(p_s_reader);
-// 	if (num_readers == 0)
-// 	{
-// 		P(p_s_writer);
-// 	}
-// 	++num_readers;
-// 	// V(p_s_reader);
-
-// 	// 读开始
-// 	disp_color_str(name, COLOR_RED);
-// 	// disp_color_str(" starts. ", COLOR_BLUE);
-// 	sleep(cost);
-// 	// 正在读
-// 	disp_color_str(name, COLOR_BLUE);
-// 	// disp_color_str(" reading. ", COLOR_GREEN);
-
-// 	// 读完成
-// 	disp_color_str(name, COLOR_GREEN);
-// 	// disp_color_str(" ends. ", COLOR_RED);
-
-// 	// P(p_s_reader);
-// 	--num_readers;
-// 	if (num_readers == 0)
-// 	{
-// 		V(p_s_writer);
-// 	}
-// 	V(p_s_reader);
-// 	return 0;
-// }
-
-// PUBLIC int writer(char *name, int cost)
-// {
-// 	P(p_s_writer);
-
-// 	// 写开始
-// 	disp_color_str(name, COLOR_RED);
-// 	// disp_color_str(" starts. ", COLOR_BLUE);
-// 	sleep(cost);
-// 	// 正在写
-// 	disp_color_str(name, COLOR_BLUE);
-// 	// disp_color_str(" writing. ", COLOR_GREEN);
-// 	// 写完成
-// 	disp_color_str(name, COLOR_GREEN);
-// 	// disp_color_str(" ends. ", COLOR_RED);
-
-// 	V(p_s_writer);
-// 	return 0;
-// }
-
-//----------------------------------------------------------------
-// 以下为写者优先
-//----------------------------------------------------------------
-
 // 初始化信号量
 PUBLIC int sem_init()
 {
@@ -221,9 +153,10 @@ PUBLIC int sem_init()
 	return 0;
 }
 
+// 通过颜色来区分状态
+// 红色开始读写，蓝色正在读写，绿色读写完成
 PUBLIC int reader(char *name, int cost)
 {
-	// 请求互斥
 	P(p_s_mutex);
 	P(p_s_reader);
 	if (num_readers == 0)
@@ -231,9 +164,8 @@ PUBLIC int reader(char *name, int cost)
 		P(p_s_writer);
 	}
 	++num_readers;
-	// V(p_s_reader);
-	// 释放互斥
 	V(p_s_mutex);
+	// V(p_s_reader);
 
 	// 读开始
 	clear_screen();
@@ -261,7 +193,6 @@ PUBLIC int reader(char *name, int cost)
 
 PUBLIC int writer(char *name, int cost)
 {
-	// 请求互斥
 	P(p_s_mutex);
 	P(p_s_writer);
 
@@ -280,9 +211,7 @@ PUBLIC int writer(char *name, int cost)
 	disp_color_str(" ends. ", COLOR_GREEN);
 
 	V(p_s_writer);
-	// 释放互斥
 	V(p_s_mutex);
-
 	return 0;
 }
 
@@ -309,6 +238,7 @@ PRIVATE PROCESS *pop(SEMAPHORE *s)
 }
 
 // （在有必要的情况下）清空屏幕
+// TODO: 没有完全清空屏幕？会有残留
 PUBLIC void clear_screen()
 {
 	if (disp_pos >= 80 * 25 * 2 - 80 * 4)
