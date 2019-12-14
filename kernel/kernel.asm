@@ -340,18 +340,17 @@ save:
 ; ====================================================================================
 sys_call:
         call    save
-
+		push	dword [p_proc_ready]
         sti
 
-		; 这样系统调用才能传参
-		; 第六章的版本不支持传参
-        push 	dword[esi + EBXREG - P_STACKBASE]
+		; 需要改造第六章的kernal，否则无法正确传参
+		push	ecx
+		push	ebx
         call    [sys_call_table + eax * 4]
+		add		esp, 4 * 3
+
         mov     [esi + EAXREG - P_STACKBASE], eax
-        pop     dword[esi + EBXREG - P_STACKBASE]
-
         cli
-
         ret
 
 

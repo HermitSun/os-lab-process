@@ -44,8 +44,6 @@ typedef struct s_proc
 	int sleep_time;
 	// 进程是否等待
 	int is_wait;
-	// 进程当前的颜色
-	int color;
 
 	u32 pid;		 /* process id passed in from MM */
 	char p_name[16]; /* name of the process */

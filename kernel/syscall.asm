@@ -53,6 +53,7 @@ print:
 color_print:
 	push ebx
 	mov ebx, [esp + 8]
+	mov	ecx, [esp + 12]
 	mov	eax, _NR_color_print
 	int	INT_VECTOR_SYS_CALL
 	pop ebx

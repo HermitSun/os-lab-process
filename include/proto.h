@@ -47,7 +47,7 @@ PUBLIC void clock_handler(int irq);
 PUBLIC int sys_get_ticks(); /* sys_call */
 PUBLIC int sys_sleep(int milli_sec);
 PUBLIC int sys_print(char *str);
-PUBLIC int sys_color_print(char *str);
+PUBLIC int sys_color_print(char *str, int color);
 PUBLIC int sys_P(SEMAPHORE *s);
 PUBLIC int sys_V(SEMAPHORE *s);
 PUBLIC int sem_init();
@@ -59,6 +59,6 @@ PUBLIC void sys_call(); /* int_handler */
 PUBLIC int get_ticks();
 PUBLIC int sleep(int milli_sec);
 PUBLIC int print(char *str);
-PUBLIC int color_print(char *str);
+PUBLIC int color_print(char *str, int color);
 PUBLIC int P(SEMAPHORE *s);
 PUBLIC int V(SEMAPHORE *s);

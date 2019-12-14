@@ -91,9 +91,9 @@ PUBLIC int sys_print(char *str)
 }
 
 // 带颜色打印字符串
-PUBLIC int sys_color_print(char *str)
+PUBLIC int sys_color_print(char *str, int color)
 {
-	disp_color_str(str, p_proc_ready->color);
+	disp_color_str(str, color);
 	return 0;
 }
 
@@ -169,20 +169,17 @@ PUBLIC int reader(char *name, int cost)
 
 	// 读开始
 	clear_screen();
-	p_proc_ready->color = COLOR_RED;
-	color_print(name);
-	color_print(" starts. ");
+	color_print(name, COLOR_RED);
+	color_print(" starts. ", COLOR_RED);
 	sleep(cost);
 	// 正在读
 	clear_screen();
-	p_proc_ready->color = COLOR_BLUE;
-	color_print(name);
-	color_print(" readed. ");
+	color_print(name, COLOR_BLUE);
+	color_print(" readed. ", COLOR_BLUE);
 	// 读完成
 	clear_screen();
-	p_proc_ready->color = COLOR_GREEN;
-	color_print(name);
-	color_print(" ends. ");
+	color_print(name, COLOR_GREEN);
+	color_print(" ends. ", COLOR_GREEN);
 
 	// P(p_s_reader);
 	--num_readers;
@@ -201,20 +198,17 @@ PUBLIC int writer(char *name, int cost)
 
 	// 写开始
 	clear_screen();
-	p_proc_ready->color = COLOR_RED;
-	color_print(name);
-	color_print(" starts. ");
+	color_print(name, COLOR_RED);
+	color_print(" starts. ", COLOR_RED);
 	sleep(cost);
 	// 正在写
 	clear_screen();
-	p_proc_ready->color = COLOR_BLUE;
-	color_print(name);
-	color_print(" writed. ");
+	color_print(name, COLOR_BLUE);
+	color_print(" writed. ", COLOR_BLUE);
 	// 写完成
 	clear_screen();
-	p_proc_ready->color = COLOR_GREEN;
-	color_print(name);
-	color_print(" ends. ");
+	color_print(name, COLOR_GREEN);
+	color_print(" ends. ", COLOR_GREEN);
 
 	V(p_s_writer);
 	V(p_s_mutex);
